@@ -5,7 +5,7 @@ import { v4 } from "uuid";
 import { useTranslation } from "@/i18n/client";
 
 import { MAPBOX_TOKEN } from "@/lib/constants";
-import { setSelectedBuilderItem } from "@/lib/store/map/slice";
+import { setGeocoderResult, setSelectedBuilderItem } from "@/lib/store/map/slice";
 import type { BuilderWidgetSchema } from "@/lib/validations/project";
 import {
   type BuilderPanelSchema,
@@ -384,6 +384,9 @@ const PublicProjectLayout = ({
                 accessToken={MAPBOX_TOKEN}
                 placeholder={t("enter_an_address")}
                 tooltip={t("search")}
+                onSelect={(result) => {
+                  dispatch(setGeocoderResult(result));
+                }}
               />
             </Box>
           )}

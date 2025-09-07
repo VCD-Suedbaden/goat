@@ -9,6 +9,7 @@ import type { Scenario } from "@/lib/validations/scenario";
 import type { Basemap, SelectorItem } from "@/types/map/common";
 import { MapSidebarItemID } from "@/types/map/common";
 import type { MapPopoverEditorProps, MapPopoverInfoProps } from "@/types/map/popover";
+import type { Result } from "@/types/map/controllers";
 
 export type TemporaryFilter = {
   id: string; // unique identifier
@@ -41,6 +42,7 @@ export interface MapState {
     position: GeolocationPosition | undefined;
   }
   | undefined;
+  geocoderResult: Result | null;
   selectedBuilderItem: BuilderPanelSchema | BuilderWidgetSchema | undefined;
   currentZoom: number | undefined;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -114,6 +116,7 @@ const initialState = {
   highlightedFeature: undefined,
   mapMode: "data",
   userLocation: undefined,
+  geocoderResult: null,
   selectedBuilderItem: undefined,
   temporaryFilters: [] as TemporaryFilter[],
 } as MapState;
@@ -199,6 +202,9 @@ const mapSlice = createSlice({
     setUserLocation: (state, action: PayloadAction<MapState["userLocation"]>) => {
       state.userLocation = action.payload;
     },
+    setGeocoderResult: (state, action: PayloadAction<MapState["geocoderResult"]>) => {
+      state.geocoderResult = action.payload;
+    },
     setSelectedBuilderItem: (state, action: PayloadAction<MapState["selectedBuilderItem"]>) => {
       state.selectedBuilderItem = action.payload;
     },
@@ -238,6 +244,7 @@ export const {
   setHighlightedFeature,
   setMapMode,
   setUserLocation,
+  setGeocoderResult,
   setSelectedBuilderItem,
   setCurrentZoom,
   addTemporaryFilter,

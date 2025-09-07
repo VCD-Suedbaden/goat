@@ -13,10 +13,11 @@ import { ICON_NAME, Icon } from "@p4b/ui/components/Icon";
 import { useTranslation } from "@/i18n/client";
 
 import { MAPBOX_TOKEN } from "@/lib/constants";
+import { setGeocoderResult } from "@/lib/store/map/slice";
 import { projectSchema } from "@/lib/validations/project";
 
 import { useBasemap } from "@/hooks/map/MapHooks";
-import { useAppSelector } from "@/hooks/store/ContextHooks";
+import { useAppDispatch, useAppSelector } from "@/hooks/store/ContextHooks";
 
 import WidgetWrapper from "@/components/builder/widgets/WidgetWrapper";
 import Header from "@/components/header/Header";
@@ -121,7 +122,7 @@ const MobileProjectLayout = ({
 }: PublicProjectLayoutProps) => {
   const { t } = useTranslation("common");
   const theme = useTheme();
-
+  const dispatch = useAppDispatch();
   const project = useMemo(() => {
     const parsedProject = projectSchema.safeParse(_project);
     if (parsedProject.success) {
@@ -245,6 +246,9 @@ const MobileProjectLayout = ({
                 accessToken={MAPBOX_TOKEN}
                 placeholder={t("enter_an_address")}
                 tooltip={t("search")}
+                onSelect={(result) => {
+                  dispatch(setGeocoderResult(result));
+                }}
               />
             </Box>
           )}

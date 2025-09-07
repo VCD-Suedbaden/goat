@@ -6,7 +6,7 @@ import { ICON_NAME } from "@p4b/ui/components/Icon";
 import { useTranslation } from "@/i18n/client";
 
 import { MAPBOX_TOKEN } from "@/lib/constants";
-import { setActiveLeftPanel, setActiveRightPanel } from "@/lib/store/map/slice";
+import { setActiveLeftPanel, setActiveRightPanel, setGeocoderResult } from "@/lib/store/map/slice";
 import { layerType } from "@/lib/validations/common";
 import { FeatureName } from "@/lib/validations/organization";
 import type { Project } from "@/lib/validations/project";
@@ -223,7 +223,14 @@ const DataProjectLayout = ({ project, onProjectUpdate }: DataProjectLayoutProps)
             padding: theme.spacing(4),
           }}>
           <Stack direction="column">
-            <Geocoder accessToken={MAPBOX_TOKEN} placeholder={t("enter_an_address")} tooltip={t("search")} />
+            <Geocoder
+              accessToken={MAPBOX_TOKEN}
+              placeholder={t("enter_an_address")}
+              tooltip={t("search")}
+              onSelect={(result) => {
+                dispatch(setGeocoderResult(result));
+              }}
+            />
           </Stack>
           <Stack direction="column">
             {!isProjectEditor && (
