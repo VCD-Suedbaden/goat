@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from core.schemas.colors import ColorRangeType
 from core.schemas.layer import ToolType
@@ -21,30 +21,20 @@ from core.schemas.toolbox_base import (
 class CatchmentAreaStartingPointsActiveMobility(CatchmentAreaStartingPointsBase):
     """Model for the active mobility catchment area starting points."""
 
-    @field_validator("latitude", "longitude", mode="after")
-    @classmethod
-    def validate_starting_points(
-        cls: type["CatchmentAreaStartingPointsActiveMobility"], values: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    @model_validator(mode="after")
+    def validate_starting_points(self) -> "CatchmentAreaStartingPointsActiveMobility":
         """Ensure that the number of starting points does not exceed 1000."""
-
-        check_starting_points(1000, values["latitude"], values["longitude"])
-        return values
-
+        check_starting_points(1000, self.latitude, self.longitude)
+        return self
 
 class CatchmentAreaStartingPointsMotorizedMobility(CatchmentAreaStartingPointsBase):
     """Model for the active mobility catchment area starting points."""
 
-    @field_validator("latitude", "longitude", mode="after")
-    @classmethod
-    def validate_starting_points(
-        cls: type["CatchmentAreaStartingPointsMotorizedMobility"],
-        values: Dict[str, Any],
-    ) -> Dict[str, Any]:
+    @model_validator(mode="after")
+    def validate_starting_points(self) -> "CatchmentAreaStartingPointsMotorizedMobility":
         """Ensure that the number of starting points does not exceed 1."""
-
-        check_starting_points(1, values["latitude"], values["longitude"])
-        return values
+        check_starting_points(1, self.latitude, self.longitude)
+        return self
 
 
 """Catchment area routing mode schemas."""

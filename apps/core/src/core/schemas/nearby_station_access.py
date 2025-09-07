@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from core.schemas.catchment_area import (
     CatchmentAreaRoutingModeActiveMobility,
@@ -21,15 +21,12 @@ from core.schemas.toolbox_base import (
 class IStartingPointNearbyStationAccess(CatchmentAreaStartingPointsActiveMobility):
     """Model for the starting points of the nearby station endpoint."""
 
-    @field_validator("latitude", "longitude", mode="after")
-    @classmethod
-    def validate_starting_points(
-        cls: type["IStartingPointNearbyStationAccess"], values: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    @model_validator(mode="after")
+    def validate_starting_points(self) -> "IStartingPointNearbyStationAccess":
         """Ensure that the number of starting points does not exceed 1000."""
+        check_starting_points(1000, self.latitude, self.longitude)
+        return self
 
-        check_starting_points(1000, values["latitude"], values["longitude"])
-        return values
 
 
 class INearbyStationAccess(BaseModel):
