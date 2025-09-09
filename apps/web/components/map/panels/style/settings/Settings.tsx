@@ -1,5 +1,5 @@
 import { Checkbox, FormControlLabel, Stack, Typography } from "@mui/material";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useTranslation } from "@/i18n/client";
 
@@ -33,9 +33,19 @@ const Settings = ({
 }) => {
   const { t } = useTranslation("common");
 
-  const [value, setValue] = useState(
-    layerStyle?.[`${type}_field`] ? layerStyle?.[`${type}_range`] || [0, 50] : layerStyle?.[`${type}`] || 0
-  );
+  const initialValue = layerStyle?.[`${type}_field`]
+    ? layerStyle?.[`${type}_range`] || [0, 50]
+    : layerStyle?.[`${type}`] || 0;
+
+  const [value, setValue] = useState(initialValue);
+
+  // Resets value when activeLayer.id or layerStyle changes
+  useEffect(() => {
+    const newValue = layerStyle?.[`${type}_field`]
+      ? layerStyle?.[`${type}_range`] || [0, 50]
+      : layerStyle?.[`${type}`] || 0;
+    setValue(newValue);
+  }, [activeLayer?.id, layerStyle, type]);
 
   const isRange = useMemo(() => (layerStyle?.[`${type}_field`] ? true : false), [layerStyle, type]);
 

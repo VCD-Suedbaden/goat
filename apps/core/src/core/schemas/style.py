@@ -303,6 +303,8 @@ style_starting = {
     "stroke_color": [225, 49, 106],
     "stroke_width": 2,
     "custom_marker": True,
+    "marker_anchor": "bottom",
+    "marker_offset": [0, 0],
     "marker_size_range": [0, 10],
     "stroke_color_range": {
         "name": "Global Warming",

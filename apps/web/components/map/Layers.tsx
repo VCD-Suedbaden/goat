@@ -122,7 +122,7 @@ const Layers = (props: LayersProps) => {
             (() => {
               if (layer.type === "feature") {
                 return (
-                  <Source key={layer.updated_at} type="vector" tiles={[getFeatureTileUrl(layer)]}>
+                  <Source key={layer.id} type="vector" tiles={[getFeatureTileUrl(layer)]}>
                     {!layer.properties?.["custom_marker"] && (
                       <MapLayer
                         key={getLayerKey(layer)}
@@ -192,7 +192,7 @@ const Layers = (props: LayersProps) => {
               } else if (layer.type === "raster" && layer.url) {
                 return (
                   <Source
-                    key={layer.updated_at}
+                    key={layer.id}
                     type="raster"
                     tiles={[layer.url]}
                     tileSize={layer.other_properties?.tile_size || 256}>
@@ -219,7 +219,7 @@ const Layers = (props: LayersProps) => {
         ? systemLayers.map((layer: ProjectLayer | Layer) =>
             props.selectedScenarioLayer?.id === layer.id ? (
               <Source
-                key={layer.updated_at}
+                key={layer.id}
                 type="vector"
                 tiles={[getFeatureTileUrl(layer)]}
                 minzoom={14}
