@@ -299,7 +299,7 @@ async def create_layer_raster(
     layer = IRasterLayerRead(**(await crud_layer.create(
         db=async_session,
         obj_in=Layer(**layer_in.model_dump(), user_id=user_id).model_dump(),
-    )))
+    )).model_dump())
     return layer
 
 

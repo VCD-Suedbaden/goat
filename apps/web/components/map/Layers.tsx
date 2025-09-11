@@ -203,6 +203,9 @@ const Layers = (props: LayersProps) => {
                       maxzoom={layer.properties.max_zoom || 24}
                       type="raster"
                       source-layer="default"
+                      beforeId={
+                        index === 0 || !useDataLayers ? undefined : useDataLayers[index - 1].id.toString()
+                      }
                       layout={{
                         visibility: layer.properties?.visibility ? "visible" : "none",
                       }}
