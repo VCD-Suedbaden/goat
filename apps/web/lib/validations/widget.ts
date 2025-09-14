@@ -15,7 +15,7 @@ export const widgetTypes = z.enum([
   ...elementTypes.options,
 ]);
 
-export const widgetTypesWithoutConfig = [elementTypes.Values.text]
+export const widgetTypesWithoutConfig = [elementTypes.Values.text, elementTypes.Values.divider];
 
 export const formatNumberTypes = z.enum([
   "none", // 1000
@@ -156,7 +156,7 @@ export const categoriesChartConfigSchema = chartsConfigBaseSchema.extend({
     .extend({
       operation_type: statisticOperationEnum.optional(),
       operation_value: z.string().optional(),
-      group_by_column_name: z.string().optional()
+      group_by_column_name: z.string().optional(),
     })
     .default({}),
   options: chartConfigOptionsBaseSchema
@@ -177,7 +177,7 @@ export const pieChartConfigSchema = chartsConfigBaseSchema.extend({
     .extend({
       operation_type: statisticOperationEnum.optional(),
       operation_value: z.string().optional(),
-      group_by_column_name: z.string().optional()
+      group_by_column_name: z.string().optional(),
     })
     .default({}),
   options: chartConfigOptionsBaseSchema
@@ -203,7 +203,6 @@ export const dividerElementConfigSchema = z.object({
   type: z.literal("divider"),
   setup: z
     .object({
-      color: z.string().optional().default("#000000"),
       size: z.number().min(1).max(10).optional().default(1),
     })
     .default({}),
@@ -215,6 +214,12 @@ export const imageElementConfigSchema = z.object({
     .object({
       url: z.string().optional(),
       alt: z.string().optional(),
+    })
+    .default({}),
+  options: z
+    .object({
+      description: z.string().optional(),
+      has_padding: z.boolean().optional().default(false),
     })
     .default({}),
 });

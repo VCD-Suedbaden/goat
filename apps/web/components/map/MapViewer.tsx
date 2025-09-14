@@ -22,6 +22,7 @@ import type { ScenarioFeatures } from "@/lib/validations/scenario";
 
 import { useAppDispatch, useAppSelector } from "@/hooks/store/ContextHooks";
 
+import GeocoderLayer from "@/components/map/GeocoderLayer";
 import Layers from "@/components/map/Layers";
 import ScenarioLayer from "@/components/map/ScenarioLayer";
 import ToolboxLayers from "@/components/map/ToolboxLayers";
@@ -314,6 +315,7 @@ const MapViewer: React.FC<MapProps> = ({
             selectedScenarioLayer={selectedScenarioEditLayer as ProjectLayer}
           />
           <ScenarioLayer scenarioLayerData={scenarioFeatures} projectLayers={layers as ProjectLayer[]} />
+          <GeocoderLayer />
           <UserLocationLayer />
           <ToolboxLayers />
           {!isMobile && popupInfo && <MapPopoverInfo key={highlightedFeature?.id ?? v4()} {...popupInfo} />}

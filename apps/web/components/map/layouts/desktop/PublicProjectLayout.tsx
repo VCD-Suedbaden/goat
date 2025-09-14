@@ -1,16 +1,17 @@
 import { Box } from "@mui/material";
 import React, { useMemo } from "react";
+import { v4 } from "uuid";
 
 import { useTranslation } from "@/i18n/client";
 
 import { MAPBOX_TOKEN } from "@/lib/constants";
-import { setSelectedBuilderItem } from "@/lib/store/map/slice";
+import { setGeocoderResult, setSelectedBuilderItem } from "@/lib/store/map/slice";
+import type { BuilderWidgetSchema } from "@/lib/validations/project";
 import {
   type BuilderPanelSchema,
   type Project,
   type ProjectLayer,
   builderPanelSchema,
-  projectSchema,
 } from "@/lib/validations/project";
 
 import { useBasemap } from "@/hooks/map/MapHooks";
@@ -39,21 +40,12 @@ export interface PublicProjectLayoutProps {
 
 const PublicProjectLayout = ({
   projectLayers = [],
-  project: _project,
+  project,
   onProjectUpdate,
   viewOnly,
 }: PublicProjectLayoutProps) => {
   const { t } = useTranslation("common");
   const dispatch = useAppDispatch();
-  const project = useMemo(() => {
-    const parsedProject = projectSchema.safeParse(_project);
-    if (parsedProject.success) {
-      return parsedProject.data;
-    } else {
-      console.error("Invalid project data:", parsedProject.error);
-      return undefined;
-    }
-  }, [_project]);
 
   const { translatedBaseMaps, activeBasemap } = useBasemap(project);
   const selectedPanel = useAppSelector((state) => state.map.selectedBuilderItem) as BuilderPanelSchema;
@@ -239,6 +231,27 @@ const PublicProjectLayout = ({
     dispatch(setSelectedBuilderItem(undefined));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onWidgetUpdate = (updatedWidget: BuilderWidgetSchema) => {
+    if (viewOnly) return;
+    const updatedPanels = panels.map((panel) => {
+      if (panel.widgets) {
+        panel.widgets = panel.widgets.map((widget) => {
+          if (widget.id === updatedWidget.id) {
+            return { ...widget, ...updatedWidget };
+          }
+          return widget;
+        });
+      }
+      return panel;
+    });
+    const builderConfig = {
+      interface: updatedPanels,
+      settings: { ...project?.builder_config?.settings },
+    };
+    onProjectUpdate?.("builder_config", builderConfig);
+  };
+
   // Add a new panel to the specified position
   const onAddSection = async (position: "top" | "bottom" | "left" | "right") => {
     if (canAddPanel(position)) {
@@ -247,7 +260,7 @@ const PublicProjectLayout = ({
         config: {},
         type: "panel",
         widgets: [],
-        id: `panel-${Date.now()}`,
+        id: v4(),
       };
       const _newPanel = builderPanelSchema.safeParse(newPanelObj);
       if (_newPanel.success) {
@@ -327,6 +340,7 @@ const PublicProjectLayout = ({
                   selected={selectedPanel?.type === "panel" && selectedPanel?.id === panel.id}
                   onChangeOrder={handleChangeOrder}
                   onWidgetDelete={onWidgetDelete}
+                  onWidgetUpdate={onWidgetUpdate}
                   onClick={() => handlePanelClick(panel)}
                 />
               ))}
@@ -370,6 +384,9 @@ const PublicProjectLayout = ({
                 accessToken={MAPBOX_TOKEN}
                 placeholder={t("enter_an_address")}
                 tooltip={t("search")}
+                onSelect={(result) => {
+                  dispatch(setGeocoderResult(result));
+                }}
               />
             </Box>
           )}
