@@ -46,6 +46,7 @@ type ColorMapItem = {
 type MarkerMapItem = {
   value: string[] | null;
   marker: string | null;
+  source?: "custom" | "library" | undefined;
 };
 
 const getColor = (colors: string[], index: number): string =>
@@ -146,12 +147,14 @@ function getLegendMarkerMap(properties: FeatureLayerProperties) {
         markerMap.push({
           value: value[0],
           marker: value[1].url,
+          source: value[1].source || "library",
         });
     });
   } else {
     markerMap.push({
       value: [""],
       marker: point.marker?.url || null,
+      source: point.marker?.source || "library",
     });
   }
   return markerMap;
@@ -162,12 +165,14 @@ function LegendRow({
   fillColor,
   strokeColor,
   markerImageUrl,
+  markerSource,
   label,
 }: {
   type: "point" | "line" | "polygon" | "marker";
   fillColor?: string;
   strokeColor?: string;
   markerImageUrl?: string | null;
+  markerSource?: string;
   label?: string | number | string[] | null;
 }) {
   return (
@@ -211,7 +216,11 @@ function LegendRow({
           </svg>
         )}
         {type === "marker" && markerImageUrl && (
-          <MaskedImageIcon imageUrl={`${markerImageUrl}`} dimension="19px" />
+          <MaskedImageIcon
+            imageUrl={`${markerImageUrl}`}
+            dimension="19px"
+            applyMask={markerSource === "custom" ? false : true}
+          />
         )}
       </div>
       <Typography variant="caption" fontWeight="bold" style={{ marginLeft: "10px" }}>
@@ -372,6 +381,7 @@ export function LegendRows({
                     key={`${value?.toString()}_${item.marker}`}
                     type="marker"
                     markerImageUrl={item.marker}
+                    markerSource={item.source || "library"}
                     label={value}
                   />
                 ))

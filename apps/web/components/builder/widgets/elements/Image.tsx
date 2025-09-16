@@ -7,13 +7,11 @@ import { ICON_NAME, Icon } from "@p4b/ui/components/Icon";
 import { useTranslation } from "@/i18n/client";
 
 import { uploadAsset } from "@/lib/api/assets";
-import { ASSETS_URL } from "@/lib/constants";
-import { assetTypeEnum } from "@/lib/validations/assets";
+import { ASSETS_MAX_FILE_SIZE_MB, assetTypeEnum } from "@/lib/validations/assets";
 import type { ImageElementSchema } from "@/lib/validations/widget";
 
 const PLACEHOLDER_URL = "https://assets.plan4better.de/img/image-placeholder.webp";
 const IMAGE_NOT_FOUND_PLACEHOLDER = "https://assets.plan4better.de/img/image-not-found-placeholder.webp";
-const MAX_FILE_SIZE_MB = 4;
 
 // Base image component
 const ImageElementBase = ({ config }: { config: ImageElementSchema }) => (
@@ -46,8 +44,8 @@ const ImageElementActionButtons = ({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-        toast.error(`${t(" maximum_image_size_is")} ${MAX_FILE_SIZE_MB}MB`);
+      if (file.size > ASSETS_MAX_FILE_SIZE_MB * 1024 * 1024) {
+        toast.error(`${t(" maximum_image_size_is")} ${ASSETS_MAX_FILE_SIZE_MB}MB`);
         e.target.value = ""; // reset input
         return;
       }
@@ -120,9 +118,7 @@ const ImageElementWidget = ({
     setLoading(true);
     try {
       const uploaded = await uploadAsset(file, assetTypeEnum.Enum.image);
-      const s3Key = uploaded.s3_key;
-      const url = `${ASSETS_URL}/${s3Key}`;
-      onWidgetUpdate?.({ ...config, setup: { ...config.setup, url } });
+      onWidgetUpdate?.({ ...config, setup: { ...config.setup, url: uploaded.url } });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast.error(t("image_upload_failed"));

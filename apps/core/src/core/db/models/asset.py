@@ -52,6 +52,16 @@ class UploadedAsset(DateTimeBase, table=True):
         sa_column=Column(String(255), nullable=False),
         description="The original filename provided by the user.",
     )
+    display_name: str | None = Field(
+        default=None,
+        sa_column=Column(String(255), nullable=True),
+        description="Optional display name for the asset.",
+    )
+    category: str | None = Field(
+        default=None,
+        sa_column=Column(String(100), nullable=True),
+        description="Optional category for organizing assets (e.g., 'markers', 'backgrounds').",
+    )
     mime_type: str = Field(
         sa_column=Column(String(100), nullable=False),
         description="MIME type of the uploaded file (e.g., image/jpeg, image/svg+xml).",

@@ -223,8 +223,9 @@ export function getSymbolStyleSpec(data: TextLabelSchemaData, layer: ProjectLaye
   const textPaint = {};
   if (layer.properties["custom_marker"]) {
     const pointProperties = layer.properties as FeatureLayerPointProperties;
+    const markerSize = pointProperties.marker_size ?? 100
     iconLayout["icon-image"] = getMapboxStyleMarker(layer);
-    iconLayout["icon-size"] = 1; // This is a scale factor not in px
+    iconLayout["icon-size"] = markerSize / 200;
     iconLayout["icon-allow-overlap"] = pointProperties.marker_allow_overlap || false;
     iconLayout["icon-anchor"] = pointProperties.marker_anchor || "center";
     iconLayout["icon-offset"] = pointProperties.marker_offset || [0, 0];

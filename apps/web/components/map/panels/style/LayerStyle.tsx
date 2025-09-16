@@ -12,11 +12,9 @@ import { getLayerClassBreaks, getLayerUniqueValues, updateDataset, useDataset } 
 import { updateProjectLayer } from "@/lib/api/projects";
 import { useUserProfile } from "@/lib/api/users";
 import { setActiveRightPanel } from "@/lib/store/map/slice";
-import { addOrUpdateMarkerImages } from "@/lib/transformers/map-image";
 import { layerType } from "@/lib/validations/common";
 import {
   type ColorMap,
-  type FeatureLayerPointProperties,
   type FeatureLayerProperties,
   type LayerUniqueValues,
   type MarkerMap,
@@ -158,7 +156,13 @@ const LayerStylePanel = ({ projectId }: { projectId: string }) => {
           6
         );
         const markerMap = [] as MarkerMap;
-        const emptyMarker = { name: "", url: "" };
+        const emptyMarker = {
+          name: "",
+          url: "",
+          source: "custom" as const,
+          category: "",
+          id: "",
+        };
         uniqueValues.items.forEach((item: LayerUniqueValues) => {
           markerMap.push([[item.value], emptyMarker]);
         });
@@ -476,11 +480,6 @@ const LayerStylePanel = ({ projectId }: { projectId: string }) => {
                                     if (!map) return;
                                     await updateOrdinalValues("marker", newStyle);
                                     updateLayerStyle(newStyle);
-                                    addOrUpdateMarkerImages(
-                                      activeLayer.id,
-                                      newStyle as FeatureLayerPointProperties,
-                                      map
-                                    );
                                   }}
                                   layerFields={layerFields}
                                   selectedField={layerProperties["marker_field"]}
@@ -510,11 +509,6 @@ const LayerStylePanel = ({ projectId }: { projectId: string }) => {
                                       onStyleChange={(newStyle: FeatureLayerProperties) => {
                                         if (!map) return;
                                         updateLayerStyle(newStyle);
-                                        addOrUpdateMarkerImages(
-                                          activeLayer.id,
-                                          newStyle as FeatureLayerPointProperties,
-                                          map
-                                        );
                                       }}
                                       layerFields={layerFields}
                                       selectedField={layerProperties["marker_size_field"]}

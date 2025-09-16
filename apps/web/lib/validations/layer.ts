@@ -131,8 +131,11 @@ export const radiusSchema = z.object({
 });
 
 export const marker = z.object({
+  id: z.string().optional(),
   name: z.string(),
   url: z.string(),
+  category: z.string().optional(),
+  source: z.enum(["library", "custom"]).optional().default("library"),
 });
 
 const MarkerMap = z.array(z.tuple([z.union([z.array(z.string()), z.null()]), marker]));

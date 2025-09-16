@@ -1,13 +1,39 @@
-import { apiRequestAuth } from "@/lib/api/fetcher";
+import useSWR from "swr";
+
+import { apiRequestAuth, fetcher } from "@/lib/api/fetcher";
 import type { AssetTypeEnum, UploadedAsset } from "@/lib/validations/assets";
 import { uploadedAssetSchema } from "@/lib/validations/assets";
 
 export const ASSETS_API_BASE_URL = new URL("api/v2/asset", process.env.NEXT_PUBLIC_API_URL).href;
 
-export const uploadAsset = async (file: File, assetType: AssetTypeEnum): Promise<UploadedAsset> => {
+export const useAssets = (queryParams?: { asset_type?: AssetTypeEnum }) => {
+    const { data, isLoading, error, mutate, isValidating } = useSWR<UploadedAsset[]>(
+        [`${ASSETS_API_BASE_URL}`, queryParams],
+        fetcher
+    );
+    return {
+        assets: data,
+        isLoading: isLoading,
+        isError: error,
+        mutate,
+        isValidating,
+    };
+};
+
+export const uploadAsset = async (
+    file: File,
+    assetType: AssetTypeEnum,
+    options?: {
+        displayName?: string;
+        category?: string;
+    }
+): Promise<UploadedAsset> => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("asset_type", assetType);
+
+    if (options?.displayName) formData.append("display_name", options.displayName);
+    if (options?.category) formData.append("category", options.category);
 
     const response = await apiRequestAuth(`${ASSETS_API_BASE_URL}/upload`, {
         method: "POST",
@@ -15,12 +41,10 @@ export const uploadAsset = async (file: File, assetType: AssetTypeEnum): Promise
     });
 
     if (!response.ok) {
-        // The server returned an error; you can throw it to be caught in the UI
-        throw new Error("Upload failed");
+        const errorText = await response.text();
+        throw new Error(`Upload failed: ${errorText}`);
     }
 
     const data = await response.json();
-
-    // Validate with Zod and return
     return uploadedAssetSchema.parse(data);
 };

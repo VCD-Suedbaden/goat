@@ -258,7 +258,7 @@ const InteractionContentPopper = ({
       open={editingContentItem !== null}
       anchorEl={anchorEl}
       transition
-      sx={{ zIndex: 200 }}
+      sx={{ zIndex: 2000 }}
       placement="left"
       modifiers={[
         {
