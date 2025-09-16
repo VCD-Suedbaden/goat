@@ -16,7 +16,23 @@ services:
     networks:
       proxy:
 
+  postgres:
+    image: postgis/postgis:16-3.4
+    environment:
+      POSTGRES_DB: goat
+      POSTGRES_USER: goat
+      POSTGRES_PASSWORD: goat
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      proxy:
+
   geoapi:
     image: ghcr.io/plan4better/goat/geoapi:latest
     networks:
       proxy:
+
+volumes:
+  postgres-data:

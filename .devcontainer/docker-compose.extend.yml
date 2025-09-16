@@ -4,14 +4,228 @@ networks:
 
 services:
   goat-dev:
-    depends_on:
-      - rabbitmq
-      - redis
+    image: goat-dev:latest
     build:
       context: .
       dockerfile: .devcontainer/Dockerfile
     container_name: goat-dev
+    depends_on:
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      postgres:
+        condition: service_started
     volumes:
       - .:/app
     networks:
       proxy:
+
+  core:
+    image: goat-dev:latest
+    container_name: goat-core
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+      routing:
+        condition: service_started
+      geoapi:
+        condition: service_started
+    working_dir: /app
+    volumes:
+      - .:/app
+      - core-uv:/app/.venv-core
+    environment:
+      UV_PROJECT_ENVIRONMENT: /app/.venv-core
+      WATCHFILES_FORCE_POLLING: "true"
+      PYTHONPATH: ".:/usr/lib/python3/dist-packages"
+      ENVIRONMENT: dev
+      POSTGRES_SERVER: postgres
+      POSTGRES_USER: goat
+      POSTGRES_PASSWORD: goat
+      POSTGRES_DB: goat
+      POSTGRES_PORT: "5432"
+      GOAT_ROUTING_HOST: "http://routing"
+      GOAT_ROUTING_PORT: "8000"
+      GOAT_GEOAPI_HOST: "http://geoapi:8000"
+    command: >-
+      bash -lc "set -euo pipefail; uv sync --group dev --package core;
+      Xvfb ${DISPLAY} -screen 0 1024x768x24 -ac +extension GLX +render -noreset -nolisten tcp -nolisten unix &
+      exec uv run --group dev --package core fastapi dev apps/core/src/core/main.py --host 0.0.0.0 --port 8000"
+    ports:
+      - "8081:8000"
+    networks:
+      proxy:
+
+  routing:
+    image: goat-dev:latest
+    container_name: goat-routing
+    depends_on:
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+    working_dir: /app
+    volumes:
+      - .:/app
+      - routing-uv:/app/.venv-routing
+    environment:
+      UV_PROJECT_ENVIRONMENT: /app/.venv-routing
+      WATCHFILES_FORCE_POLLING: "true"
+      ENVIRONMENT: dev
+      POSTGRES_SERVER: postgres
+      POSTGRES_USER: goat
+      POSTGRES_PASSWORD: goat
+      POSTGRES_DB: goat
+      POSTGRES_PORT: "5432"
+      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_DB: "0"
+    command: >-
+      bash -lc "set -euo pipefail; uv sync --group dev --package routing;
+      exec uv run --group dev --package routing fastapi dev apps/routing/src/routing/main.py --host 0.0.0.0 --port 8000"
+    ports:
+      - "8083:8000"
+    networks:
+      proxy:
+
+  routing-worker:
+    image: goat-dev:latest
+    container_name: goat-routing-worker
+    depends_on:
+      routing:
+        condition: service_started
+      postgres:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+      redis:
+        condition: service_started
+    working_dir: /app
+    volumes:
+      - .:/app
+      - routing-uv:/app/.venv-routing
+    environment:
+      UV_PROJECT_ENVIRONMENT: /app/.venv-routing
+      ENVIRONMENT: dev
+      POSTGRES_SERVER: postgres
+      POSTGRES_USER: goat
+      POSTGRES_PASSWORD: goat
+      POSTGRES_DB: goat
+      POSTGRES_PORT: "5432"
+      CELERY_BROKER_URL: "amqp://guest:guest@rabbitmq:5672//"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      REDIS_DB: "0"
+    command: >-
+      bash -lc "set -euo pipefail; uv sync --group dev --package routing;
+      exec uv run --group dev --package routing celery -A routing.core.worker.celery_app worker --loglevel=info"
+    networks:
+      proxy:
+
+  geoapi:
+    image: goat-dev:latest
+    container_name: goat-geoapi
+    depends_on:
+      postgres:
+        condition: service_started
+    working_dir: /app
+    volumes:
+      - .:/app
+      - geoapi-uv:/app/.venv-geoapi
+    environment:
+      UV_PROJECT_ENVIRONMENT: /app/.venv-geoapi
+      WATCHFILES_FORCE_POLLING: "true"
+      ENVIRONMENT: dev
+      POSTGRES_SERVER: postgres
+      POSTGRES_USER: goat
+      POSTGRES_PASSWORD: goat
+      POSTGRES_DB: goat
+      POSTGRES_OUTER_PORT: "5432"
+    command: >-
+      bash -lc "set -euo pipefail; uv sync --group dev --package geoapi;
+      exec uv run --group dev --package geoapi fastapi dev apps/geoapi/src/geoapi/main.py --host 0.0.0.0 --port 8000"
+    ports:
+      - "8082:8000"
+    networks:
+      proxy:
+
+  web:
+    image: goat-dev:latest
+    container_name: goat-web
+    network_mode: host
+    depends_on:
+      core:
+        condition: service_started
+      geoapi:
+        condition: service_started
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXTAUTH_SECRET: dev-secret
+      NEXT_PUBLIC_API_URL: "http://localhost:8081"
+      NEXT_PUBLIC_GEOAPI_URL: "http://localhost:8082"
+      NEXT_PUBLIC_ACCOUNTS_API_URL: "http://localhost:8081"
+      NEXT_PUBLIC_MAP_TOKEN: ""
+      NEXT_PUBLIC_SENTRY_DSN: ""
+      NEXT_PUBLIC_APP_ENVIRONMENT: development
+      NEXT_PUBLIC_KEYCLOAK_ISSUER: "http://localhost:8080/realms/dev"
+      NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: dev-client
+      KEYCLOAK_CLIENT_SECRET: dev-secret
+    command: >-
+      bash -lc "set -euo pipefail; corepack enable; pnpm install --frozen-lockfile;
+      exec pnpm --filter @p4b/web dev -- --hostname 0.0.0.0"
+
+  docs:
+    image: goat-dev:latest
+    container_name: goat-docs
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+    command: >-
+      bash -lc "set -euo pipefail; corepack enable; pnpm install --frozen-lockfile;
+      exec pnpm --filter @p4b/docs dev -- --host 0.0.0.0 --port 3010"
+    ports:
+      - "3010:3010"
+    networks:
+      proxy:
+
+  storybook:
+    image: goat-dev:latest
+    container_name: goat-storybook
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      STORYBOOK_DISABLE_TELEMETRY: "1"
+    command: >-
+      bash -lc "set -euo pipefail; corepack enable; pnpm install --frozen-lockfile;
+      exec pnpm --filter @p4b/storybook dev -- --host 0.0.0.0 --port 6006"
+    ports:
+      - "6006:6006"
+    networks:
+      proxy:
+
+volumes:
+  core-uv:
+  routing-uv:
+  geoapi-uv:

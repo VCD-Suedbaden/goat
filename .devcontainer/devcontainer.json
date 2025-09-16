@@ -4,6 +4,17 @@
   "workspaceFolder": "/app",
   "shutdownAction": "stopCompose",
   "service": "goat-dev",
+  "forwardPorts": [3000, 3010, 6006, 8081, 8082, 8083, 5433, 15672],
+  "portsAttributes": {
+    "3000": { "label": "GOAT Web" },
+    "3010": { "label": "Documentation" },
+    "6006": { "label": "Storybook" },
+    "8081": { "label": "Core API" },
+    "8082": { "label": "GeoAPI" },
+    "8083": { "label": "Routing API" },
+    "5433": { "label": "PostgreSQL" },
+    "15672": { "label": "RabbitMQ Management" }
+  },
   "customizations": {
     "vscode": {
         "extensions": [
